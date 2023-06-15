@@ -34,7 +34,7 @@ const featuresItems = [
   },
 ];
 
-const Features: React.FC = () => {
+const Features = () => {
   const [openTab, setOpenTab] = useState(0);
 
   return (
@@ -49,9 +49,9 @@ const Features: React.FC = () => {
               </span>
             </h1>
             <h3 className="text-lg font-light mt-8 text-center">
-              GreenPin is more than just a clean-up app. We've assembled a set
-              of dynamic features that enable you to drive environmental change
-              and create a greener community, one pin at a time.
+              GreenPin is more than just a clean-up app. We&apos;ve assembled a
+              set of dynamic features that enable you to drive environmental
+              change and create a greener community, one pin at a time.
             </h3>
           </div>
         </div>
