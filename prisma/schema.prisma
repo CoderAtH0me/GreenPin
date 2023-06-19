@@ -6,6 +6,134 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mongodb"
   url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  email         String    @unique
+  emailVerified DateTime?
+
+  image          String?
+  hashedPassword String?
+
+  location String?
+
+  // Add the following field
+  walletAddress String? @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  accounts       Account[]
+  eventsCreated  Event[]         @relation("eventsCreated")
+  participations Participation[]
+  comments       Comment[]
+  session        Session[]
+}
+
+model Account {
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @db.ObjectId
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.String
+  access_token      String? @db.String
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.String
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model VerificationToken {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Session {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  sessionToken String   @unique @map("session_token")
+  userId       String   @db.ObjectId
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model Event {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  description String
+  photo       String?
+  afterparty  String?
+
+  challangeDay DateTime?
+
+  location Float[]
+
+  comments Comment[]
+
+  creatorId String @db.ObjectId
+  creator   User   @relation(name: "eventsCreated", fields: [creatorId], references: [id], onDelete: Cascade)
+
+  successStory SuccessStory[]
+
+  participations Participation[]
+
+  wallet Wallet[]
+}
+
+model Wallet {
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  address   String // Wallet address
+  publicKey String? // Public key of the wallet
+  eventId   String  @db.ObjectId
+  event     Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+model Participation {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  eventId   String   @db.ObjectId
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model Comment {
+  id      String @id @default(auto()) @map("_id") @db.ObjectId
+  content String
+
+  likes String[]
+
+  eventId String @db.ObjectId
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  authorId String @db.ObjectId
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model SuccessStory {
+  id              String @id @default(auto()) @map("_id") @db.ObjectId
+  beforePhoto     String
+  afterPhoto      String
+  report          String
+  litterCollected Int? // amount of litter collected
+  participants    Int // number of participants
+
+  eventId String @db.ObjectId
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
 }

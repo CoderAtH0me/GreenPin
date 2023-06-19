@@ -3,8 +3,9 @@
 import Link from "next/link";
 import Logo from "./logo";
 import MainMap from "./main-map-mapbox";
-import BlurImage from "./blur-image";
-import Image from "next/image";
+
+import { signOut } from "next-auth/react";
+import { User } from "@prisma/client";
 
 function NavItems() {
   return (
@@ -22,20 +23,18 @@ function NavItems() {
   );
 }
 
-const Header: React.FC = () => {
+interface HeaderProps {
+  user: User | null;
+}
+
+const Header: React.FC<HeaderProps> = ({ user }) => {
   return (
     <header>
       <nav className="z-30 backdrop-blur-md  fixed w-full drop-shadow-2xl border-b-[1px] border-neutral-650">
         <ul className="grid grid-cols-3 justify-items-center gap-x-10 py-2 ">
           <li>
             <Link className="" href={"/"}>
-              <Image
-                src="/logos/logo-2.svg"
-                width={100}
-                className=""
-                height={35}
-                alt="logo"
-              />
+              <Logo />
             </Link>
           </li>
           <NavItems />
@@ -43,10 +42,18 @@ const Header: React.FC = () => {
             <button className=" text-black px-4   border-neutral-400 hover:text-green-600">
               To Account
             </button>
+            {user && (
+              <button
+                onClick={() => signOut()}
+                className=" text-black px-4   border-neutral-400 hover:text-green-600"
+              >
+                Sign Out
+              </button>
+            )}
           </div>
         </ul>
       </nav>
-      <MainMap zoom={7} />
+      <MainMap user={user} zoom={6} />
     </header>
   );
 };

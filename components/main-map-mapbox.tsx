@@ -2,25 +2,28 @@
 
 import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
+import Link from "next/link";
 
 import { Geolocation } from "@/lib/types";
 
-// Make sure to replace this with your own Mapbox access token.
-// after all change this to env
-const MAPBOX_ACCESS_TOKEN =
-  "pk.eyJ1IjoiZmlyZWNvZGUyMSIsImEiOiJjbGl1Nmw1bm0xa3hzM2xucTlkaG8xdGxuIn0.N1SQUe0YrBpfR4qnC0EWZA";
+import LoginModal from "./modals/login-modal";
+import BlurImage from "./blur-image";
+
+import { User } from "@prisma/client";
 
 interface MapboxMapProps {
   zoom: number;
+  user: User | null;
 }
 type MapLocation = {
   lat: number;
   lng: number;
 };
 
-const MainMap: React.FC<MapboxMapProps> = ({ zoom = 7 }) => {
+const MainMap: React.FC<MapboxMapProps> = ({ user, zoom = 7 }) => {
   const [location, setLocation] = useState<MapLocation | null>(null);
   const [tiltAngle, setTiltAngle] = useState<number>(72);
+  const [open, setOpen] = useState<boolean>(false);
 
   const rotationInterval = useRef<any | null>(null);
 
@@ -40,7 +43,8 @@ const MainMap: React.FC<MapboxMapProps> = ({ zoom = 7 }) => {
         })
       )
       .then(() => {
-        mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
+        mapboxgl.accessToken =
+          process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || "";
 
         map.current = new mapboxgl.Map({
           container: mapContainer.current as HTMLElement,
@@ -79,20 +83,41 @@ const MainMap: React.FC<MapboxMapProps> = ({ zoom = 7 }) => {
       style={{ width: "100%", height: "auto" }}
     >
       <div className="grid lg:grid-cols-12 lg:grid-rows-1 grid-cols-1 grid-rows-2 absolute inset-0 pointer-events-none">
-        <div className="flex flex-col relative col-span-1 row-start-1 row-end-2 shadow-xl  lg:col-span-5 items-center  justify-center h-full backdrop-blur-sm lg:backdrop-blur  lg:pointer-events-auto ">
-          <div className="flex text-center lg:text-start flex-col items-center justify-center lg:items-start px-8">
-            <h1 className="text-4xl lg:text-5xl font-bold text-black leading-10 drop-shadow-2xl">
-              Welcome to GreenPin
-            </h1>
-            <h2 className="text-xl lg:text-2xl mt-4 font-light text-black leading-10 drop-shadow-2xl">
-              Your Green Deed Starts Here
-            </h2>
-            <button className="px-8 py-2 mt-4 text-white bg-green-600 rounded-md hover:bg-green-700 pointer-events-auto">
-              Get Started
-            </button>
+        {!user ? (
+          <div className="flex flex-col relative col-span-1 row-start-1 row-end-2 shadow-xl  lg:col-span-5 items-center  justify-center h-full backdrop-blur-sm lg:backdrop-blur  lg:pointer-events-auto ">
+            <div className="flex text-center lg:text-start flex-col items-center justify-center lg:items-start px-8">
+              <h1 className="text-4xl lg:text-5xl font-bold text-black leading-10 drop-shadow-2xl">
+                Welcome to GreenPin
+              </h1>
+              <h2 className="text-xl lg:text-2xl mt-4 font-light text-black leading-10 drop-shadow-2xl">
+                Your Green Deed Starts Here
+              </h2>
+              <div className="relative">
+                <LoginModal />
+              </div>
+            </div>
           </div>
-          <div className="col-span-1 row-span-1 "></div>
-        </div>
+        ) : (
+          <div className="flex flex-col relative col-span-1 row-start-1 row-end-2 shadow-xl lg:col-span-2 items-center justify-around h-full backdrop-blur-sm lg:backdrop-blur  lg:pointer-events-auto">
+            <div className="flex flex-col items-center justify-center backdrop-blur-3xl p-10 rounded-md shadow-2xl">
+              <BlurImage
+                className="rounded-full drop-shadow-xl border"
+                width={100}
+                height={100}
+                alt="profile"
+                src={user?.image || ""}
+              />
+
+              <p>{user?.name}</p>
+            </div>
+            <Link
+              className="text-xl bg-green-600 hover:bg-green-800 text-white py-2 px-8 rounded-md"
+              href="/dashboard"
+            >
+              Make Pin
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );
